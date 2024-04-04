@@ -11,7 +11,7 @@ This project aims to practically understand preemptive priority scheduling withi
 
 ## Built With
 
-* [![My Skills](https://skills.thijs.gg/icons?i=,VS,java,)](https://skills.thijs.gg)
+* [![My Skills](https://skills.thijs.gg/icons?i=,java,)](https://skills.thijs.gg)
 
 
 
