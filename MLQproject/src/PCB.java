@@ -2,6 +2,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
 
 
 
@@ -16,13 +21,15 @@ public class PCB {
 	int TurnArroundTime; 
 	int WaitingTime; 
 	int ResponseTime;
+        int executionTime;
 	boolean check ; //flag
 
 	 public PCB(String PId, int priority, int ArrivalTime, int CPU_burst) {
 		this.PId = "P"+PId;
 		this.priority = priority;
 		this.ArrivalTime = ArrivalTime;
-		this.CPU_burst = CPU_burst; 
+		this.CPU_burst = CPU_burst;
+		executionTime=0; 
 		StartTime = 0;
 		terminationTime = 0;
 		TurnArroundTime = 0; 
@@ -106,13 +113,26 @@ public class PCB {
 	public boolean isCheck() {
 		return check;
 	}
+	public void execute(int executionTime) {
+        this.executionTime += executionTime;
+    }
+    
+    public void setExecutionTime(int executionTime) {
+        this.executionTime = executionTime;
+    }
 
+    public int getExecutionTime() {
+        return executionTime;
+    }
+    public boolean isCompleted() {
+        return executionTime >= CPU_burst;
+    }
 
-
+        
 	@Override
 	 public String toString() {
 		return "Process Id: "+PId+ " | Priority: " +priority+ " | CPU burst: "+CPU_burst+ " | Arrival time: "+ArrivalTime+ " | Start time: "+StartTime+ 
-				" | Termination time: "+terminationTime+ " | Turnarround time: "+TurnArroundTime+ " | Waiting time: "+WaitingTime+" | Response time: "+ResponseTime;
+				" | Termination time: "+terminationTime+ " | Turnarround time: "+TurnArroundTime+ " | Waiting time: "+WaitingTime+" | Response time: "+ResponseTime +"|  executionTime=" + executionTime ;
 	}
 	
  
