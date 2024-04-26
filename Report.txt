@@ -1,14 +1,13 @@
 Processes Information:
 ----------------------
-Process Id: P1 | Priority: 1 | CPU burst: 6 | Arrival time: 0 | Start time: 0 | Termination time: 9 | Turnarround time: 9 | Waiting time: 3 | Response time: 0
-Process Id: P2 | Priority: 1 | CPU burst: 3 | Arrival time: 3 | Start time: 3 | Termination time: 6 | Turnarround time: 3 | Waiting time: 0 | Response time: 0
-Process Id: P3 | Priority: 1 | CPU burst: 2 | Arrival time: 5 | Start time: 9 | Termination time: 11 | Turnarround time: 6 | Waiting time: 4 | Response time: 4
+Process Id: P1 || Priority: 2 || CPU burst: 16 || Arrival time: 0 || Start time: 0 || Termination time: 21 || Turnaround time: 21 || Waiting time: 5 || Response time: 0
+Process Id: P2 || Priority: 1 || CPU burst: 5 || Arrival time: 1 || Start time: 1 || Termination time: 6 || Turnaround time: 5 || Waiting time: 0 || Response time: 0
 
-Processes Gantt Chart: | P1 | P2 | P1 | P3 | 
+ Gantt Chart: | P1 | P2 | P1 | 
 
 Processes Scheduling Criteria:
 -----------------------------
-Avg Turnaround Time : 6.000 
-Avg Waiting Time    : 2.333 
-Avg Response Time   : 1.333 
+Avg Turnaround Time : 13.000 
+Avg Waiting Time    : 2.500 
+Avg Response Time   : 0.000 
 

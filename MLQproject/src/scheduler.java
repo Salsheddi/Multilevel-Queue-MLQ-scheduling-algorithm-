@@ -4,9 +4,9 @@ import java.util.*;
 
     private List<PCB> Q1;
     private List<PCB> Q2;
-    private String orderChart = "";
+    private String processOrder = "";
 
-    int clockTime = 0;
+    int currentTime = 0;
     int quantum = 3;
     int Counter = 0;
 
@@ -19,13 +19,13 @@ import java.util.*;
     }
 
     public void run() {
-        PCB excProcess = null;
+        PCB currentExcProcess = null;
         List<PCB> rQ1 = new ArrayList<>();
         List<PCB> rQ2 = new ArrayList<>();
 
-        clockTime = 0;
+        currentTime = 0;
         Counter = 0;
-        orderChart = "";
+        processOrder = "";
 
         for (PCB process : Q1) {
             process.timeInCPU = 0;
@@ -39,20 +39,20 @@ import java.util.*;
             process.terminationTime = 0;
         }
 
-        while (!Q1.isEmpty() || !Q2.isEmpty() || !rQ1.isEmpty() || !rQ2.isEmpty() || excProcess != null) {
+        while (!Q1.isEmpty() || !Q2.isEmpty() || !rQ1.isEmpty() || !rQ2.isEmpty() || currentExcProcess != null) {
 
-            while (!Q1.isEmpty() && Q1.get(0).ArrivalTime <= clockTime) {
+            while (!Q1.isEmpty() && Q1.get(0).ArrivalTime <= currentTime) {
                 PCB process = Q1.remove(0);
                 rQ1.add(process);
             }
 
-            while (!Q2.isEmpty() && Q2.get(0).ArrivalTime <= clockTime) {
+            while (!Q2.isEmpty() && Q2.get(0).ArrivalTime <= currentTime) {
                 PCB process = Q2.remove(0);
                 rQ2.add(process);
                 sortByBurstTime(rQ2);
             }
 
-            if (excProcess == null) {
+            if (currentExcProcess == null) {
                 PCB process = null;
                 if (!rQ1.isEmpty()) {
                     process = rQ1.remove(0);
@@ -61,28 +61,28 @@ import java.util.*;
                 }
 
                 if (process != null)
-                    excProcess = execute(process);
+                    currentExcProcess = execute(process);
 
             } else {
-                if (excProcess.priority == 1 && !rQ1.isEmpty() && Counter == quantum) {
-                    rQ1.add(excProcess);
-                    excProcess = execute(rQ1.remove(0));
+                if (currentExcProcess.priority == 1 && !rQ1.isEmpty() && Counter == quantum) {
+                    rQ1.add(currentExcProcess);
+                    currentExcProcess = execute(rQ1.remove(0));
 
-                } else if (excProcess.priority == 2 && !rQ1.isEmpty()) {
-                    rQ2.add(excProcess);
+                } else if (currentExcProcess.priority == 2 && !rQ1.isEmpty()) {
+                    rQ2.add(currentExcProcess);
                     sortByBurstTime(rQ2);
-                    excProcess = execute(rQ1.remove(0));
+                    currentExcProcess = execute(rQ1.remove(0));
                 }
             }
 
-            clockTime++;
+            currentTime++;
 
-            if (excProcess != null) {
-                excProcess.timeInCPU++;
+            if (currentExcProcess != null) {
+                currentExcProcess.timeInCPU++;
                 Counter++;
-                if (excProcess.timeInCPU == excProcess.CPU_burst) {
-                    terminate(excProcess);
-                    excProcess = null;
+                if (currentExcProcess.timeInCPU == currentExcProcess.CPU_burst) {
+                    terminate(currentExcProcess);
+                    currentExcProcess = null;
                 }
             }
         }
@@ -90,23 +90,23 @@ import java.util.*;
 
     private PCB execute(PCB process) {
         Counter = 0;
-        orderChart += process.PId + " | ";
+        processOrder += process.PId + " | ";
 
         if (process.timeInCPU == 0)
-            process.StartTime = clockTime;
+            process.StartTime = currentTime;
 
         return process;
     }
 
     private void terminate(PCB process) {
-        process.terminationTime = clockTime;
+        process.terminationTime = currentTime;
         process.WaitingTime = process.terminationTime - process.ArrivalTime - process.CPU_burst;
         process.ResponseTime = process.StartTime - process.ArrivalTime;
         process.TurnArroundTime = process.terminationTime - process.ArrivalTime;
     }
 
-    public String getOrderChart() {
-        return orderChart;
+    public String getprocessOrder() {
+        return processOrder;
     }
 
     private void sortByBurstTime(List<PCB> array) {
@@ -119,7 +119,7 @@ import java.util.*;
 }
 public class scheduler {
 
-    static Scanner scr = new Scanner(System.in);
+    static Scanner UserInput = new Scanner(System.in);
     
     static SchedulerX scheduler;
     static List<PCB> array = new ArrayList<>();
@@ -131,20 +131,21 @@ public class scheduler {
 
         int choice = 0;
         do {
-            System.out.println("\nMenu:");
-            System.out.println("1. Enter Processes Information");
-            System.out.println("2. Report detailed information about each process and different scheduling criteria");
-            System.out.println("3. Exit the program");
-            System.out.print("Enter your choice: ");
-            if (scr.hasNextInt()) {
-                choice = scr.nextInt();
+            System.out.println("\nEnter your choice: ");
+            System.out.println("1 - Schedule Processes");
+            System.out.println("2 - Print Report about Scheduled Processes");
+            System.out.print("3 - Exit");
+           
+            
+            if (UserInput.hasNextInt()) {
+                choice = UserInput.nextInt();
                 switch (choice) {
                     case 1:
                       enterProcessInformation();
                         break;
                     case 2:
                         if (array.isEmpty()) {
-                            System.out.println("theres No processes.");
+                            System.out.println("theres No processes to report.");
                         } else {
                             scheduler = new SchedulerX(Q1, Q2);
                             scheduler.run();
@@ -154,14 +155,14 @@ public class scheduler {
                         }
                         break;
                     case 3:
-                        System.out.println("Exiting the program...");
+                        System.out.println("Exiting the program");
                         break;
                     default:
-                        System.out.println("Invalid choice. Please try again.");
+                        System.out.println("Invalid choice.");
                 }
             } else {
                 System.out.println(" Please enter valid  choice.");
-                scr.next(); 
+                UserInput.next(); 
             }
 
         } while (choice != 3);
@@ -169,8 +170,8 @@ public class scheduler {
 
     public static void enterProcessInformation() {
         System.out.println("Please enter the number of processes:");
-        if (scr.hasNextInt()) {
-            int numOfProcesses = scr.nextInt();
+        if (UserInput.hasNextInt()) {
+            int numOfProcesses = UserInput.nextInt();
 
             if (numOfProcesses <= 0) {
                 System.out.println("Number of processes must be > 0");
@@ -186,8 +187,8 @@ public class scheduler {
             for (int i = 0; i < numOfProcesses; i++) {
                 System.out.println("Process [" + (i + 1) + "]:");
                 System.out.print("Arrival Time: ");
-                if (scr.hasNextInt()) {
-                    int arrivalTime = scr.nextInt();
+                if (UserInput.hasNextInt()) {
+                    int arrivalTime = UserInput.nextInt();
 
                     if (arrivalTime < 0) {
                         System.out.println("Arrival Time must be >= 0");
@@ -195,16 +196,16 @@ public class scheduler {
                     }
 
                     System.out.print("CPU burst: ");
-                    if (scr.hasNextInt()) {
-                        int burstTime = scr.nextInt();
+                    if (UserInput.hasNextInt()) {
+                        int burstTime = UserInput.nextInt();
                         if (burstTime <= 0) {
                             System.out.println("CPU burst must be > 0");
                             return;
                         }
 
                         System.out.print("Priority: ");
-                        if (scr.hasNextInt()) {
-                            int priority = scr.nextInt();
+                        if (UserInput.hasNextInt()) {
+                            int priority = UserInput.nextInt();
                             if (priority != 1 && priority != 2) {
                                 System.out.println("Priority must be either 1 or 2");
                                 return;
@@ -213,17 +214,17 @@ public class scheduler {
                             array.add(new PCB("P" + (i + 1),priority , arrivalTime,burstTime ));
                         } else {
                             System.out.println("Please enter a valid  priority.");
-                            scr.next(); // Clear the invalid input from the scanner
+                            UserInput.next(); // Clear the invalid input from the scanner
                             return;
                         }
                     } else {
                         System.out.println("Please enter a valid CPU burst.");
-                        scr.next(); // Clear the invalid input from the scanner
+                        UserInput.next(); // Clear the invalid input from the scanner
                         return;
                     }
                 } else {
                     System.out.println("Please enter a valid arrival time.");
-                    scr.next(); // Clear the invalid input from the scanner
+                    UserInput.next(); // Clear the invalid input from the scanner
                     return;
                 }
             }
@@ -236,7 +237,7 @@ public class scheduler {
             }
         } else {
             System.out.println("Invalid input! Please enter a valid integer for the number of processes.");
-            scr.next(); // Clear the invalid input from the scanner
+            UserInput.next(); // Clear the invalid input from the scanner
         }
     }
 
@@ -248,7 +249,7 @@ public class scheduler {
             }
 
         System.out.println();
-        System.out.println(" Gantt Chart: | " + scheduler.getOrderChart());
+        System.out.println(" Gantt Chart: | " + scheduler.getprocessOrder());
         System.out.println();
 
         int size = array.size();
@@ -279,7 +280,7 @@ public class scheduler {
                  }
 
             pw.println();
-            pw.println(" Gantt Chart: | " + scheduler.getOrderChart());
+            pw.println(" Gantt Chart: | " + scheduler.getprocessOrder());
             pw.println();
 
             int size = array.size();

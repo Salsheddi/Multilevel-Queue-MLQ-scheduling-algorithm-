@@ -102,12 +102,18 @@ public class PCB {
 
    
 
-        
+	
 	@Override
-	 public String toString() {
-		return "Process Id: "+PId+ " | Priority: " +priority+ " | CPU burst: "+CPU_burst+ " | Arrival time: "+ArrivalTime+ " | Start time: "+StartTime+ 
-				" | Termination time: "+terminationTime+ " | Turnarround time: "+TurnArroundTime+ " | Waiting time: "+WaitingTime+" | Response time: "+ResponseTime  ;
+	public String toString() {
+		return "Process Id: " + PId +
+				" || Priority: " + priority +
+				" || CPU burst: " + CPU_burst +
+				" || Arrival time: " + ArrivalTime +
+				" || Start time: " + StartTime +
+				" || Termination time: " + terminationTime +
+				" || Turnaround time: " + TurnArroundTime +
+				" || Waiting time: " + WaitingTime +
+				" || Response time: " + ResponseTime;
 	}
 	
- 
 }
