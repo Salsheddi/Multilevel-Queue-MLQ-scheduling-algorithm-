@@ -1,225 +1,310 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
+import java.io.*;
+import java.util.*;
+ class SchedulerX {
 
+    private List<PCB> Q1;
+    private List<PCB> Q2;
+    private String orderChart = "";
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Scanner;
+    int clockTime = 0;
+    int quantum = 3;
+    int Counter = 0;
 
+    public SchedulerX(List<PCB> Q1, List<PCB> Q2) {
+        this.Q1 = Q1;
+        this.Q2 = Q2;
 
+        sortByArrivalTime(this.Q1);
+        sortByArrivalTime(this.Q2);
+    }
+
+    public void run() {
+        PCB excProcess = null;
+        List<PCB> rQ1 = new ArrayList<>();
+        List<PCB> rQ2 = new ArrayList<>();
+
+        clockTime = 0;
+        Counter = 0;
+        orderChart = "";
+
+        for (PCB process : Q1) {
+            process.timeInCPU = 0;
+            process.StartTime = 0;
+            process.terminationTime = 0;
+        }
+
+        for (PCB process : Q2) {
+            process.timeInCPU = 0;
+            process.StartTime = 0;
+            process.terminationTime = 0;
+        }
+
+        while (!Q1.isEmpty() || !Q2.isEmpty() || !rQ1.isEmpty() || !rQ2.isEmpty() || excProcess != null) {
+
+            while (!Q1.isEmpty() && Q1.get(0).ArrivalTime <= clockTime) {
+                PCB process = Q1.remove(0);
+                rQ1.add(process);
+            }
+
+            while (!Q2.isEmpty() && Q2.get(0).ArrivalTime <= clockTime) {
+                PCB process = Q2.remove(0);
+                rQ2.add(process);
+                sortByBurstTime(rQ2);
+            }
+
+            if (excProcess == null) {
+                PCB process = null;
+                if (!rQ1.isEmpty()) {
+                    process = rQ1.remove(0);
+                } else if (!rQ2.isEmpty()) {
+                    process = rQ2.remove(0);
+                }
+
+                if (process != null)
+                    excProcess = execute(process);
+
+            } else {
+                if (excProcess.priority == 1 && !rQ1.isEmpty() && Counter == quantum) {
+                    rQ1.add(excProcess);
+                    excProcess = execute(rQ1.remove(0));
+
+                } else if (excProcess.priority == 2 && !rQ1.isEmpty()) {
+                    rQ2.add(excProcess);
+                    sortByBurstTime(rQ2);
+                    excProcess = execute(rQ1.remove(0));
+                }
+            }
+
+            clockTime++;
+
+            if (excProcess != null) {
+                excProcess.timeInCPU++;
+                Counter++;
+                if (excProcess.timeInCPU == excProcess.CPU_burst) {
+                    terminate(excProcess);
+                    excProcess = null;
+                }
+            }
+        }
+    }
+
+    private PCB execute(PCB process) {
+        Counter = 0;
+        orderChart += process.PId + " | ";
+
+        if (process.timeInCPU == 0)
+            process.StartTime = clockTime;
+
+        return process;
+    }
+
+    private void terminate(PCB process) {
+        process.terminationTime = clockTime;
+        process.WaitingTime = process.terminationTime - process.ArrivalTime - process.CPU_burst;
+        process.ResponseTime = process.StartTime - process.ArrivalTime;
+        process.TurnArroundTime = process.terminationTime - process.ArrivalTime;
+    }
+
+    public String getOrderChart() {
+        return orderChart;
+    }
+
+    private void sortByBurstTime(List<PCB> array) {
+        Collections.sort(array, Comparator.comparingInt(a -> a.CPU_burst));
+    }
+
+    private void sortByArrivalTime(List<PCB> array) {
+        Collections.sort(array, Comparator.comparingInt(a -> a.ArrivalTime));
+    }
+}
 public class scheduler {
-    private static ArrayList<PCB> Q1 = new ArrayList<>();
-    private static ArrayList<PCB> Q2 = new ArrayList<>();
-    private static ArrayList<PCB> scheduledOrder = new ArrayList<>();
+
+    static Scanner scr = new Scanner(System.in);
+    
+    static SchedulerX scheduler;
+    static List<PCB> array = new ArrayList<>();
+    static List<PCB> Q1 = new ArrayList<>();
+    static List<PCB> Q2 = new ArrayList<>();
+    
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        int choice;
 
+        int choice = 0;
         do {
             System.out.println("\nMenu:");
-            System.out.println("1. Enter process information");
+            System.out.println("1. Enter Processes Information");
             System.out.println("2. Report detailed information about each process and different scheduling criteria");
             System.out.println("3. Exit the program");
             System.out.print("Enter your choice: ");
-            choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            if (scr.hasNextInt()) {
+                choice = scr.nextInt();
+                switch (choice) {
+                    case 1:
+                      enterProcessInformation();
+                        break;
+                    case 2:
+                        if (array.isEmpty()) {
+                            System.out.println("theres No processes.");
+                        } else {
+                            scheduler = new SchedulerX(Q1, Q2);
+                            scheduler.run();
 
-            switch (choice) {
-                case 1:
-                    enterProcessInformation(scanner);
-                    break;
-                case 2:
-                    reportInformation();
-                    break;
-                case 3:
-                    System.out.println("Exiting the program...");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-        } while (choice != 3);
-        
-        scanner.close();
-    }
-
-    private static void enterProcessInformation(Scanner scanner) {
-        System.out.print("Enter the total number of processes in the system: ");
-        int totalProcesses = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
-
-        for (int i = 1; i <= totalProcesses; i++) {
-            System.out.println("Process " + i + ":");
-            System.out.print("Enter process priority (1 or 2): ");
-            int priority = scanner.nextInt();
-
-            // make sure that priority vaild
-            while (priority > 2 || priority < 1) { 
-                System.out.println("Enter process priorty for process #" + (i + 1));
-                priority = scanner.nextInt();
-            }
-            
-            System.out.print("Enter arrival time: ");
-            int arrivalTime = scanner.nextInt();
-            System.out.print("Enter CPU burst time: ");
-            int cpuBurstTime = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
-
-           PCB pcb = new PCB("" + i, priority, arrivalTime, cpuBurstTime);
-            if (priority == 1)
-                Q1.add(pcb);
-            else
-                Q2.add(pcb);
-        }
-    }
-
-    private static void scheduleProcesses() {
-        int currentTime = 0; // the start of the chantt chart is 0
-        int  quantumTime=3;
-        boolean Q1c=true;
-        while (!Q1.isEmpty() || !Q2.isEmpty()) {
-            if (!Q1.isEmpty()) {// by having Q1 checked first we ensure befor processing any low priority process that theres no high prority process
-                        Queue<PCB> copiedProcessList = new LinkedList<>();
-
-      // Create a ready queue to hold processes ready for execution
-        Queue<PCB> readyQueue = new LinkedList<>();
-//        readyQueue.addAll(processList);
-           Iterator<PCB> iterator = Q1.iterator();
-while (iterator.hasNext()) {
-    PCB process = iterator.next();
-    if (process.getArrivalTime() == 0) {
-        readyQueue.add(process);
-        iterator.remove(); // Safely remove the current process from processList
-        System.out.println(process.getPId()+ "ss");
-    }
-}
-        // Implementation of Round Robin algorithm
-        while (!readyQueue.isEmpty()) {
-            PCB currentProcess = readyQueue.poll(); // Get the next process from the ready queue
-            int remainingTime = currentProcess.getCPU_burst()- currentProcess.getExecutionTime();
-            int executionTime = Math.min(quantumTime, remainingTime);
-
-            if (!currentProcess.isCompleted()) {
-                if (currentProcess.getExecutionTime() == 0) {
-                    currentProcess.setResponseTime(currentTime - currentProcess.getArrivalTime());
+                            printConsole();
+                            printFile();
+                        }
+                        break;
+                    case 3:
+                        System.out.println("Exiting the program...");
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
                 }
-                currentProcess.execute(executionTime);
-                currentTime += executionTime;
-               
+            } else {
+                System.out.println(" Please enter valid  choice.");
+                scr.next(); 
+            }
 
-                System.out.println(currentProcess.getPId());
-                
-                // Check if process is completed
-                if (currentProcess.isCompleted()) {
-                    currentProcess.setTerminationTime(currentTime);
-                    currentProcess.setTurnArroundTime(currentProcess.getTerminationTime()- currentProcess.getArrivalTime());
-                    currentProcess.setWaitingTime(currentProcess.getTurnArroundTime()- currentProcess.getCPU_burst());
-                                copiedProcessList.add(currentProcess); // Assuming Process has a copy constructor
-                              scheduledOrder.add(currentProcess); // Assuming Process has a copy constructor
+        } while (choice != 3);
+    }
 
+    public static void enterProcessInformation() {
+        System.out.println("Please enter the number of processes:");
+        if (scr.hasNextInt()) {
+            int numOfProcesses = scr.nextInt();
 
+            if (numOfProcesses <= 0) {
+                System.out.println("Number of processes must be > 0");
+                return;
+            }
+
+            Q1.clear();
+            Q2.clear();
+            array.clear();
+
+           
+
+            for (int i = 0; i < numOfProcesses; i++) {
+                System.out.println("Process [" + (i + 1) + "]:");
+                System.out.print("Arrival Time: ");
+                if (scr.hasNextInt()) {
+                    int arrivalTime = scr.nextInt();
+
+                    if (arrivalTime < 0) {
+                        System.out.println("Arrival Time must be >= 0");
+                        return;
+                    }
+
+                    System.out.print("CPU burst: ");
+                    if (scr.hasNextInt()) {
+                        int burstTime = scr.nextInt();
+                        if (burstTime <= 0) {
+                            System.out.println("CPU burst must be > 0");
+                            return;
+                        }
+
+                        System.out.print("Priority: ");
+                        if (scr.hasNextInt()) {
+                            int priority = scr.nextInt();
+                            if (priority != 1 && priority != 2) {
+                                System.out.println("Priority must be either 1 or 2");
+                                return;
+                            }
+
+                            array.add(new PCB("P" + (i + 1),priority , arrivalTime,burstTime ));
+                        } else {
+                            System.out.println("Please enter a valid  priority.");
+                            scr.next(); // Clear the invalid input from the scanner
+                            return;
+                        }
+                    } else {
+                        System.out.println("Please enter a valid CPU burst.");
+                        scr.next(); // Clear the invalid input from the scanner
+                        return;
+                    }
                 } else {
-                     
-             // Check for new arrivals and add them to the ready queue
-        for (Iterator<PCB> it = Q1.iterator(); it.hasNext();) {
-    PCB process = it.next();
-    if (!process.isCompleted() && process.getArrivalTime() <= currentTime && Q1.contains(process)) {
-        readyQueue.offer(process);
-        it.remove(); // Safely remove the current process from processList
-    }
-}
-
-readyQueue.offer(currentProcess);
+                    System.out.println("Please enter a valid arrival time.");
+                    scr.next(); // Clear the invalid input from the scanner
+                    return;
+                }
             }
 
-          
+            for (PCB process : array) {
+                if (process.priority == 1)
+                    Q1.add(process);
+                else
+                    Q2.add(process);
             }
-        }
-        }
-             else {
-                // SJF algorithm for Q2
-                Q2.sort((p1, p2) -> p1.CPU_burst - p2.CPU_burst);
-                PCB process = Q2.remove(0);
-                scheduledOrder.add(process);
-                process.ResponseTime = currentTime - process.ArrivalTime;
-                process.StartTime = currentTime;
-                process.terminationTime = currentTime + process.CPU_burst;
-                process.TurnArroundTime = process.terminationTime - process.ArrivalTime;
-                process.WaitingTime = process.TurnArroundTime - process.CPU_burst;
-                currentTime = process.terminationTime;
-            }
+        } else {
+            System.out.println("Invalid input! Please enter a valid integer for the number of processes.");
+            scr.next(); // Clear the invalid input from the scanner
         }
     }
 
-    private static void reportInformation() { 
-        scheduleProcesses();
+    public static void printConsole() {
+        System.out.println("Processes Information:");
+        System.out.println("----------------------");
+        for (PCB process : array) {
+            System.out.println(process);
+            }
 
-        
-        if (scheduledOrder.isEmpty()) {
-            System.out.println("No processes scheduled yet.");
-            return;
+        System.out.println();
+        System.out.println(" Gantt Chart: | " + scheduler.getOrderChart());
+        System.out.println();
+
+        int size = array.size();
+        double totalTurnAround = 0, totalWait = 0, totalResponse = 0;
+
+        for (PCB process : array) {
+            totalWait += process.WaitingTime;
+            totalTurnAround += process.TurnArroundTime;
+            totalResponse += process.ResponseTime;
         }
 
-       
+        System.out.println("Processes Scheduling Criteria:");
+        System.out.println("-----------------------------");
+        System.out.printf("Avg Turnaround Time : %.3f \n", totalTurnAround / size);
+        System.out.printf("Avg Waiting Time    : %.3f \n", totalWait / size);
+        System.out.printf("Avg Response Time   : %.3f \n", totalResponse / size);
+        System.out.println();
+    }
 
-        double avgTurnaroundTime = 0;
-        double avgWaitingTime = 0;
-        double avgResponseTime = 0;
-
+    public static void printFile() {
         try {
-            FileWriter writer = new FileWriter("Report.txt");
-            writer.write("Scheduling order of the processes: ");
-            writer.write("[");
-            System.out.print('[');
-            for (PCB process : scheduledOrder) {
-                writer.write(process.PId + " | ");
-                System.out.print(process.PId+" | ");
+            PrintWriter pw = new PrintWriter("Report.txt");
 
+            pw.println("Processes Information:");
+            pw.println("----------------------");
+            for (PCB process : array){
+                pw.println(process);
+                 }
+
+            pw.println();
+            pw.println(" Gantt Chart: | " + scheduler.getOrderChart());
+            pw.println();
+
+            int size = array.size();
+            double totalTurnAround = 0, totalWait = 0, totalResponse = 0;
+
+            for (PCB process : array) {
+                totalWait += process.WaitingTime;
+                totalTurnAround += process.TurnArroundTime;
+                totalResponse += process.ResponseTime;
             }
-            writer.write("\n\n");
-          
 
-            for (PCB process : scheduledOrder) {
-                writer.write(process.toString()+"\n");
-                System.out.println(process.toString());
-                avgTurnaroundTime += process.TurnArroundTime;
-                avgWaitingTime += process.WaitingTime;
-                avgResponseTime += process.ResponseTime;
-            }
+            pw.println("Processes Scheduling Criteria:");
+            pw.println("-----------------------------");
+            pw.printf("Avg Turnaround Time : %.3f \n", totalTurnAround / size);
+            pw.printf("Avg Waiting Time    : %.3f \n", totalWait / size);
+            pw.printf("Avg Response Time   : %.3f \n", totalResponse / size);
+            pw.println();
 
-            avgTurnaroundTime /= scheduledOrder.size();
-            avgWaitingTime /= scheduledOrder.size();
-            avgResponseTime /= scheduledOrder.size();
+            pw.close();
 
-            writer.write("\nAverage Turnaround Time: " + avgTurnaroundTime + "\n");
-            writer.write("Average Waiting Time: " + avgWaitingTime + "\n");
-            writer.write("Average Response Time: " + avgResponseTime + "\n");
-            System.out.println("\nAverage Turnaround Time: " + avgTurnaroundTime + "\n");
-           System.out.println("Average Waiting Time: " + avgWaitingTime + "\n");
-            System.out.println("Average Response Time: " + avgResponseTime + "\n");
-
-            writer.close();
-
-            System.out.println("Report has been written to Report.txt.");
-        } catch (IOException e) {
-            System.out.println("An error occurred while writing to the file.");
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
-       private static boolean allProcessesCompleted(ArrayList<PCB> processList) {
-        for (PCB process : processList) {
-            if (!process.isCompleted()) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
+
+
+
