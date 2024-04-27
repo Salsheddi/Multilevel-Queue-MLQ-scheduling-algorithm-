@@ -147,7 +147,9 @@ public class scheduler {
                         if (array.isEmpty()) {
                             System.out.println("theres No processes to report.");
                         } else {
+                            // create a new scheduler object that has Q1 and Q2 
                             scheduler = new SchedulerX(Q1, Q2);
+                            // call the schduling method(run) to process the processes
                             scheduler.run();
 
                             printConsole();
@@ -169,11 +171,13 @@ public class scheduler {
     }
 
     public static void enterProcessInformation() {
+        //.The program will prompt the user to enter the number of processes (P). 
         System.out.println("Please enter the number of processes:");
         if (UserInput.hasNextInt()) {
             int numOfProcesses = UserInput.nextInt();
 
             if (numOfProcesses <= 0) {
+                //. The program will prompt the user to enter the priority, arrival time, and CPU burst of each process. 
                 System.out.println("Number of processes must be > 0");
                 return;
             }
@@ -183,7 +187,7 @@ public class scheduler {
             array.clear();
 
            
-
+            //The program will create a process (object) of type PCB for each process and initialize its attributes:
             for (int i = 0; i < numOfProcesses; i++) {
                 System.out.println("Process [" + (i + 1) + "]:");
                 System.out.print("Arrival Time: ");
@@ -219,7 +223,7 @@ public class scheduler {
                         }
                     } else {
                         System.out.println("Please enter a valid CPU burst.");
-                        UserInput.next(); // Clear the invalid input from the scanner
+                        UserInput.next(); // Clear scanner
                         return;
                     }
                 } else {
@@ -228,6 +232,7 @@ public class scheduler {
                     return;
                 }
             }
+            //  The program will add the process to either Q1 or Q2, depending on its priority.
 
             for (PCB process : array) {
                 if (process.priority == 1)
@@ -237,7 +242,7 @@ public class scheduler {
             }
         } else {
             System.out.println("Invalid input! Please enter a valid integer for the number of processes.");
-            UserInput.next(); // Clear the invalid input from the scanner
+            UserInput.next(); // Clear scanner
         }
     }
 
